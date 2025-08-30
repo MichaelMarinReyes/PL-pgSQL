@@ -2,19 +2,15 @@ package frontend.principal;
 
 import backend.utils.Data;
 import frontend.reports.LexicalReportPanel;
-import frontend.tabs.TabPane;
+import frontend.reports.SemanticReportPanel;
+import frontend.reports.SyntaxReportPanel;
+import frontend.tabs.TabPanel;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 
 /**
  *
@@ -22,16 +18,19 @@ import javax.swing.tree.TreePath;
  */
 public class MainWindow extends javax.swing.JFrame {
 
+    private final static String TITLE = "Intérprete PL/pgSQL";
     private LexicalReportPanel lexicalReport = new LexicalReportPanel();
-    private TabPane tabbedPane = new TabPane();
+    private SyntaxReportPanel syntaxReport = new SyntaxReportPanel();
+    private SemanticReportPanel semanticReport = new SemanticReportPanel();
+    private TabPanel tabbedPane = new TabPanel();
 
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
-        this.setTitle("Intérprete PL/pgSQL");
+        this.setTitle(TITLE);
         initComponents();
-        docsTree.setModel(null);
+        principalTabbed();
     }
 
     /**
@@ -42,17 +41,17 @@ public class MainWindow extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
-        filesMenuPanel = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        docsTree = new javax.swing.JTree();
         containerPanel = new javax.swing.JPanel();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        menuBar = new javax.swing.JMenuBar();
         archiveBtn = new javax.swing.JMenu();
         openArchiveBtn = new javax.swing.JMenuItem();
         newProjectBtn = new javax.swing.JMenuItem();
         saveArchiveBtn = new javax.swing.JMenuItem();
-        newTabBtn = new javax.swing.JMenu();
+        editorBtn = new javax.swing.JMenu();
+        viewScriptsBtn = new javax.swing.JMenuItem();
+        newTabBtn = new javax.swing.JMenuItem();
         tablesBtn = new javax.swing.JMenu();
         tablesTypesBtn = new javax.swing.JMenuItem();
         symbolsTableBtn = new javax.swing.JMenuItem();
@@ -64,25 +63,9 @@ public class MainWindow extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(650, 470));
 
-        filesMenuPanel.setBackground(new java.awt.Color(204, 204, 204));
-        filesMenuPanel.setLayout(new java.awt.BorderLayout());
-
-        jScrollPane1.setViewportView(docsTree);
-
-        filesMenuPanel.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
         containerPanel.setBackground(new java.awt.Color(255, 204, 51));
-
-        javax.swing.GroupLayout containerPanelLayout = new javax.swing.GroupLayout(containerPanel);
-        containerPanel.setLayout(containerPanelLayout);
-        containerPanelLayout.setHorizontalGroup(
-            containerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 797, Short.MAX_VALUE)
-        );
-        containerPanelLayout.setVerticalGroup(
-            containerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 684, Short.MAX_VALUE)
-        );
+        containerPanel.setRequestFocusEnabled(false);
+        containerPanel.setLayout(new java.awt.BorderLayout());
 
         archiveBtn.setText("Archivo");
 
@@ -110,15 +93,27 @@ public class MainWindow extends javax.swing.JFrame {
         });
         archiveBtn.add(saveArchiveBtn);
 
-        jMenuBar1.add(archiveBtn);
+        menuBar.add(archiveBtn);
 
-        newTabBtn.setText("Nueva pestaña");
-        newTabBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                newTabBtnMouseClicked(evt);
+        editorBtn.setText("Editor");
+
+        viewScriptsBtn.setText("Ver scripts");
+        viewScriptsBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewScriptsBtnActionPerformed(evt);
             }
         });
-        jMenuBar1.add(newTabBtn);
+        editorBtn.add(viewScriptsBtn);
+
+        newTabBtn.setText("Nueva pestaña");
+        newTabBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newTabBtnActionPerformed(evt);
+            }
+        });
+        editorBtn.add(newTabBtn);
+
+        menuBar.add(editorBtn);
 
         tablesBtn.setText("Tablas");
 
@@ -138,7 +133,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         tablesBtn.add(symbolsTableBtn);
 
-        jMenuBar1.add(tablesBtn);
+        menuBar.add(tablesBtn);
 
         reportsBtn.setText("Reportes");
 
@@ -166,23 +161,19 @@ public class MainWindow extends javax.swing.JFrame {
         });
         reportsBtn.add(semanticErrorsBtn);
 
-        jMenuBar1.add(reportsBtn);
+        menuBar.add(reportsBtn);
 
-        setJMenuBar(jMenuBar1);
+        setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(filesMenuPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(6, 6, 6)
-                .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 868, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(filesMenuPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 686, Short.MAX_VALUE)
         );
 
         pack();
@@ -212,20 +203,29 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void saveArchiveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveArchiveBtnActionPerformed
         JFileChooser chooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("*.YML", "yml");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Archivos YML (*.yml)", "yml");
         chooser.setFileFilter(filter);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
         int selection = chooser.showSaveDialog(this);
-        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 
         if (selection == JFileChooser.APPROVE_OPTION) {
             File archive = chooser.getSelectedFile();
             File path = chooser.getCurrentDirectory();
 
-            String name = chooser.getSelectedFile().getName();
+            String name = archive.getName();
+
+            if (!name.toLowerCase().endsWith(".yml")) {
+                name += ".yml";
+                archive = new File(path, name);
+            }
+
             Data data = new Data();
             data.writeYML("texto", name, path);
 
+            JOptionPane.showMessageDialog(this, "Archivo guardado en: " + archive.getAbsolutePath());
         }
+
     }//GEN-LAST:event_saveArchiveBtnActionPerformed
 
     private void tablesTypesBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tablesTypesBtnActionPerformed
@@ -237,106 +237,42 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_symbolsTableBtnActionPerformed
 
     private void lexicalErrorsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lexicalErrorsBtnActionPerformed
+        this.setTitle(TITLE + " - Errores Léxicos");
         this.paintPanel(lexicalReport);
     }//GEN-LAST:event_lexicalErrorsBtnActionPerformed
 
     private void syntacticalErrorsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_syntacticalErrorsBtnActionPerformed
-        // TODO add your handling code here:
+        this.setTitle(TITLE + " - Errores Sintácticos");
+        this.paintPanel(syntaxReport);
     }//GEN-LAST:event_syntacticalErrorsBtnActionPerformed
 
     private void semanticErrorsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_semanticErrorsBtnActionPerformed
-        // TODO add your handling code here:
+        this.setTitle(TITLE + " - Errores Semánticos");
+        this.paintPanel(semanticReport);
     }//GEN-LAST:event_semanticErrorsBtnActionPerformed
 
     private void newProjectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newProjectBtnActionPerformed
-        String projectName = JOptionPane.showInputDialog(this, "Ingrese el nombre del proyecto", "Nuevo proyecto", JOptionPane.PLAIN_MESSAGE);
 
-        if (projectName != null && !projectName.trim().isEmpty()) {
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode(projectName);
-            DefaultTreeModel model = new DefaultTreeModel(root);
-            docsTree.setModel(model);
-
-            docsTree.addTreeSelectionListener(e -> {
-                TreePath path = e.getPath();
-                if (path == null) {
-                    return;
-                }
-
-                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-
-                if (selectedNode.getParent() != null) { // significa que es un archivo
-                    String fileName = selectedNode.toString();
-
-                    // Verificar si ya está abierto
-                    for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-                        if (tabbedPane.getTitleAt(i).equals(fileName)) {
-                            tabbedPane.setSelectedIndex(i);
-                            return;
-                        }
-                    }
-
-                    // Crear panel con editor + consola
-                    JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-                    JTextArea editor = new JTextArea();
-                    JTextArea console = new JTextArea();
-                    console.setEditable(false);
-
-                    splitPane.setTopComponent(new JScrollPane(editor));
-                    splitPane.setBottomComponent(new JScrollPane(console));
-                    splitPane.setDividerLocation(300);
-
-                    tabbedPane.addTab(fileName, splitPane);
-                    tabbedPane.setSelectedComponent(splitPane);
-                }
-            });
-
-        } else {
-            JOptionPane.showMessageDialog(this, "Debe ingresar un nombre válido", "Error", JOptionPane.ERROR_MESSAGE);
-        }
     }//GEN-LAST:event_newProjectBtnActionPerformed
 
-    private void newTabBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_newTabBtnMouseClicked
-        TreePath selectedPath = docsTree.getSelectionPath();
+    private void viewScriptsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewScriptsBtnActionPerformed
+        this.setTitle(TITLE);
+        paintPanel(tabbedPane);
+    }//GEN-LAST:event_viewScriptsBtnActionPerformed
 
-        if (selectedPath == null) {
-            JOptionPane.showMessageDialog(this, "Selecciona un proyecto antes de crear una pestaña", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) selectedPath.getLastPathComponent();
-
-        if (selectedNode.getParent() == null) {
-            String tabName = JOptionPane.showInputDialog(this, "Nombre de la pestaña:");
-            if (tabName == null || tabName.trim().isEmpty()) {
-                return;
-            }
-            JTextArea editor = new JTextArea();
-            JScrollPane scroll = new JScrollPane(editor);
-
-            tabbedPane.addTab(tabName, scroll);
-            tabbedPane.setSelectedComponent(scroll);
-
-            DefaultMutableTreeNode newFileNode = new DefaultMutableTreeNode(tabName);
-            selectedNode.add(newFileNode);
-
-            DefaultTreeModel model = (DefaultTreeModel) docsTree.getModel();
-            model.reload(selectedNode);
-            paintPanel(tabbedPane);
-        } else {
-            JOptionPane.showMessageDialog(this, "Debes seleccionar un proyecto.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }//GEN-LAST:event_newTabBtnMouseClicked
+    private void newTabBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newTabBtnActionPerformed
+        String tabName = JOptionPane.showInputDialog(this, "Nombre de la pestaña:", "Pestaña nueva", JOptionPane.INFORMATION_MESSAGE);
+        tabbedPane.addNewTab(tabName);
+    }//GEN-LAST:event_newTabBtnActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu archiveBtn;
     private javax.swing.JPanel containerPanel;
-    private javax.swing.JTree docsTree;
-    private javax.swing.JPanel filesMenuPanel;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JMenu editorBtn;
     private javax.swing.JMenuItem lexicalErrorsBtn;
+    private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem newProjectBtn;
-    private javax.swing.JMenu newTabBtn;
+    private javax.swing.JMenuItem newTabBtn;
     private javax.swing.JMenuItem openArchiveBtn;
     private javax.swing.JMenu reportsBtn;
     private javax.swing.JMenuItem saveArchiveBtn;
@@ -345,6 +281,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenuItem syntacticalErrorsBtn;
     private javax.swing.JMenu tablesBtn;
     private javax.swing.JMenuItem tablesTypesBtn;
+    private javax.swing.JMenuItem viewScriptsBtn;
     // End of variables declaration//GEN-END:variables
 
     private void paintPanel(Component panel) {
@@ -353,5 +290,10 @@ public class MainWindow extends javax.swing.JFrame {
         containerPanel.add(panel, BorderLayout.CENTER);
         containerPanel.revalidate();
         containerPanel.repaint();
+    }
+
+    private void principalTabbed() {
+        tabbedPane.addNewTab("Pestaña 1");
+        this.paintPanel(tabbedPane);
     }
 }
