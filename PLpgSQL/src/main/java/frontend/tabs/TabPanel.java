@@ -1,23 +1,19 @@
 package frontend.tabs;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
+import backend.analyzers.Parse;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
- *
  * @author michael
  */
 public class TabPanel extends JPanel {
 
-    private javax.swing.JTabbedPane tabsPanelTabbed;
+    private final JTextArea consoleTextArea = new JTextArea();
+    private final JTextArea editorTextArea = new JTextArea();
+    private final Parse parse = new Parse();
+    private JTabbedPane tabsPanelTabbed;
 
     public TabPanel() {
         initComponents();
@@ -34,7 +30,6 @@ public class TabPanel extends JPanel {
     public void addNewTab(String title) {
         JPanel newTab = new JPanel(new BorderLayout());
 
-        JTextArea editorTextArea = new JTextArea();
         editorTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
 
         LineNumber lineNumber = new LineNumber(editorTextArea);
@@ -44,7 +39,7 @@ public class TabPanel extends JPanel {
         JButton newExecuteButton = new JButton("Ejecutar");
         JLabel newColumnLabel = new JLabel("Columna: 1");
 
-        JTextArea consoleTextArea = new JTextArea();
+
         consoleTextArea.setEditable(false);
         consoleTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         JScrollPane consoleScrollPane = new JScrollPane(consoleTextArea);
@@ -55,11 +50,7 @@ public class TabPanel extends JPanel {
                 consoleTextArea.setText("No hay texto para ejecutar\n");
                 consoleTextArea.append("Escriba en el área de texto");
             } else {
-                consoleTextArea.setText("");
-                String code = editorTextArea.getText();
-                consoleTextArea.append("Ejecutando códe\n");
-                consoleTextArea.append(code + "\n");
-                consoleTextArea.append("Fin\n\n");
+                parserText();
             }
         });
 
@@ -97,7 +88,10 @@ public class TabPanel extends JPanel {
         tabsPanelTabbed.setSelectedComponent(newTab);
     }
 
-    public javax.swing.JTabbedPane getTabsPanelTabbed() {
-        return tabsPanelTabbed;
+    private void parserText() {
+        consoleTextArea.setText("");
+        String code = editorTextArea.getText();
+        String response = parse.analyzeText(code);
+        consoleTextArea.setText(response);
     }
 }
