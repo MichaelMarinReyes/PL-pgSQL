@@ -19,6 +19,9 @@ ddl : createSchema
     | alterTable
     | dropTable
     | insertInto
+    | createFunction
+    | replaceFunction
+    | alterFunction
     ;
 
 createSchema : CREATE SCHEMA ID;
@@ -71,7 +74,9 @@ updateStmt  : UPDATE ID SET assignmentList whereClause?;
 
 deleteStmt  : DELETE FROM ID whereClause?;
 
-selectStmt  : SELECT selectList FROM tableSource (joinClause)* whereClause?;
+selectStmt  : SELECT selectList (FROM tableSource (joinClause)*)? whereClause? ';'?;
+
+selectNoSemi : SELECT selectList (FROM tableSource (joinClause)*)? whereClause?;
 
 joinClause  : (JOIN | LEFT JOIN) tableSource ON condition;
 
@@ -83,10 +88,15 @@ valueList   : value (',' value)*;
 
 assignmentList : assignment (',' assignment)*;
 
-assignment     : ID '=' value;
+assignment : ID '=' value;
 
 selectList : '*'
-           | columnRef (',' columnRef)*;
+           | columnRef (',' columnRef)*
+           | functionCall (',' functionCall)*;
+
+functionCall : ID '(' argList? ')';
+
+argList : expr (',' expr)*;
 
 columnRef : ID ('.' ID)?;
 
@@ -114,9 +124,9 @@ dcl : createUser
     | grantStmt
     | revokeStmt;
 
-createUser : CREATE USER ID;
+createUser : CREATE USER ID ';';
 
-grantStmt  : GRANT permiso ON objeto TO ID;
+grantStmt : GRANT permiso ON objeto TO ID ';';
 
 permiso : SELECT
         | INSERT
@@ -125,7 +135,7 @@ permiso : SELECT
 
 objeto : ID '.' (ID | '*');
 
-revokeStmt : REVOKE permiso ON ID FROM ID;
+revokeStmt : REVOKE permiso ON ID FROM ID ';';
 
 // Lenguaje pg_sql
 pgSql : block;
@@ -134,9 +144,9 @@ block : declareSection? stmtList;
 
 declareSection : DECLARE declItem+;
 
-declItem : ID typeSpec ';';
+declItem : ID typeSpec ('=' expr)? ';';
 
-stmtList : (stmt)*;
+stmtList : stmt*;
 
 stmt : assignStmt
      | flowControl
@@ -229,13 +239,62 @@ exprList : expr (',' expr)*;
 transactional : BEGIN_ stmtList (COMMIT | ROLLBACK) ';';
 
 //Funciones built-in
-builtIn : BEGIN_;
+builtIn : NOW '(' ')'
+        | CONCAT '(' exprList ')'
+        | MODIFY_DATE '(' expr (',' expr)* ')'
+        | CAST '(' expr ',' baseType ')'
+        | RANDOM '(' ')'
+        | SUBSTRING '(' expr (',' expr) ')'
+        | ARRAY_PUSH '(' expr (',' expr) ')'
+        | LEN '(' expr ')';
 
 //Funciones
-functions: BEGIN_ BEGIN_;
+functions : CREATE FUNCTION ID '(' params ')' RETURNS baseType AS '$''$' expr '$''$' LANGUAGE PLPGSQL;
+
+createFunction
+    : CREATE FUNCTION ID '(' params? ')' RETURNS baseType AS DOLLAR_DOLLAR beginFunctionBlock DOLLAR_DOLLAR LANGUAGE PLPGSQL ';'?
+    ;
+
+replaceFunction
+    : REPLACE FUNCTION ID '(' params? ')' RETURNS baseType AS DOLLAR_DOLLAR beginFunctionBlock DOLLAR_DOLLAR LANGUAGE PLPGSQL ';'?
+    ;
+
+alterFunction
+    : ALTER FUNCTION ID '(' params? ')' RENAME TO ID ';'?
+    ;
+
+params : param (',' param)* ;
+
+param  : ID typeSpec;
+
+beginFunctionBlock : BEGIN_ stmtListFunction END ';'? ;
+
+stmtListFunction : stmt;
 
 //Procedimientos
-procedures : BEGIN_ BEGIN_ BEGIN_;
+procedures : createProcedure
+           | callProcedure
+           | alterProcedure
+           | replaceProcedure;
+
+createProcedure : CREATE PROCEDURE ID '(' paramList? ')' LANGUAGE PLPGSQL AS DOLLAR_DOLLAR procedureBody DOLLAR_DOLLAR;
+
+callProcedure : CALL ID '(' argList? ')';
+
+alterProcedure : ALTER PROCEDURE ID '(' paramTypeList? ')' RENAME TO ID;
+
+replaceProcedure : REPLACE PROCEDURE ID '(' paramList? ')' RETURNS baseType AS DOLLAR_DOLLAR procedureBody DOLLAR_DOLLAR LANGUAGE PLPGSQL;
+
+paramList : param (',' param)*;
+
+paramTypeList : baseType (',' baseType)*;
+
+procedureBody : (procedureStmt)*;
+
+procedureStmt : INSERT INTO ID '(' columnList '(' VALUES ')' argList ')' ';'
+                    | RAISE NOTICE STRING_LITERAL (',' expr)* ';'
+                    | BEGIN_ procedureBody END ';'
+                    | expr ';';
 
 // Lexer
 CREATE: 'CREATE';
@@ -306,7 +365,26 @@ EXCEPTION: 'EXCEPTION';
 BEGIN_: 'BEGIN';
 COMMIT: 'COMMIT';
 ROLLBACK: 'ROLLBACK';
-//
+//Built-in
+NOW: 'NOW';
+CONCAT: 'CONCAT';
+MODIFY_DATE: 'MODIFY_DATE';
+CAST: 'CAST';
+RANDOM: 'RANDOM';
+SUBSTRING: 'SUBSTRING';
+ARRAY_PUSH: 'ARRAY_PUSH';
+LEN: 'LEN';
+//Funciones
+FUNCTION: 'FUNCTION';
+RETURNS: 'RETURNS';
+AS: 'AS';
+LANGUAGE: 'LANGUAGE';
+PLPGSQL: 'PLPGSQL';
+DOLLAR_DOLLAR: '$$';
+REPLACE: 'REPLACE';
+RENAME: 'RENAME';
+PROCEDURE: 'PROCEDURE';
+CALL: 'CALL';
 
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
 INT_LITERAL: [0-9]+;
